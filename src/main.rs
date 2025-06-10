@@ -1,9 +1,12 @@
 mod bigram_util;
+mod file_writer;
+mod letters;
 mod visuals;
 mod vowels;
 use core::f64;
 use std::fs;
 
+use letters::PositionData;
 use plotters::style::{
     full_palette::{ORANGE, PURPLE},
     BLUE, GREEN, RED,
@@ -26,7 +29,8 @@ impl WordleDictionary {
 fn main() {
     let dictionary = WordleDictionary::new("words.txt");
 
-    let indexed_vowels = vowels::count_vowels(&dictionary.all_words);
+    // Loop over all the words and letters to create overall vowel-consonant pie chart
+    let indexed_vowels = vowels::count_pair_pattern(&dictionary.all_words);
     let pairing_pattern = indexed_vowels.patterns;
     let mut pairing_data: Vec<f64> = vec![0.0; 4];
     let mut total_count = 0;
@@ -83,5 +87,16 @@ fn main() {
         let pie_filename = "vowel-percent-".to_owned() + &n.to_string();
         let labels: Vec<String> = vec!["Vowels".to_string(), "Consonants".to_string()];
         let _ = visuals::draw_vowel_pie(&data, &[BLUE, ORANGE], title, pie_filename, &labels);
+
+        // Retrieve single letter data at each position
+        let letter_data = PositionData::analyze_position(&dictionary.all_words, n as usize);
+        let file_name = format!("data-reports/letter-freqency-pos-{}", &n);
+        file_writer::write_letter_data(letter_data, n as usize, file_name);
+
+        if n == 3 {
+            let letter_data = PositionData::analyze_position(&dictionary.all_words, 1 + n as usize);
+            let file_name = format!("data-reports/letter-freqency-pos-{}", 1 + &n);
+            file_writer::write_letter_data(letter_data, n as usize, file_name);
+        }
     }
 }

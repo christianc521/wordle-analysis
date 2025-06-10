@@ -53,12 +53,12 @@ impl IndexedLetterStats {
     }
 }
 
-pub fn count_vowels(dictionary: &Vec<String>) -> IndexedLetterStats {
+pub fn count_pair_pattern(dictionary: &Vec<String>) -> IndexedLetterStats {
     let mut stats = IndexedLetterStats::new();
+
     let mut previous_char: char = '.';
     let mut word_indexes: Vec<HashMap<char, i32>> = vec![HashMap::new(); 5];
 
-    // iterate through each letter in each word, increment vowels accordingly
     for word in dictionary {
         let chars: Vec<char> = word.chars().collect();
         let word_len = chars.len();
@@ -114,6 +114,48 @@ pub fn count_vowels(dictionary: &Vec<String>) -> IndexedLetterStats {
     }
 
     stats.vowel_percentage = stats.vowels as f32 / (stats.vowels + stats.consonants) as f32;
+
+    stats
+}
+
+pub fn count_vowels(dictionary: &Vec<String>) -> IndexedLetterStats {
+    let mut stats = IndexedLetterStats::new();
+    let mut previous_char: char = '.';
+    let mut word_indexes: Vec<HashMap<char, i32>> = vec![HashMap::new(); 5];
+
+    // iterate through each letter in each word, increment vowels accordingly
+    for word in dictionary {
+        let chars: Vec<char> = word.chars().collect();
+        let word_len = chars.len();
+
+        for index in 0..word_len {
+            let c = chars[index];
+            *word_indexes[index].entry(c).or_insert(1) += 1;
+
+            if index < word_len - 1 {
+                match c {
+                    'a' | 'e' | 'i' | 'o' | 'u' => {
+                        stats.vowels += 1;
+
+                        if index > 0 && previous_char != '.' {
+                            let pair = LetterPair::new(previous_char, c);
+                            stats.add_pair(pair);
+                        }
+                    }
+                    _ if c.is_alphabetic() => {
+                        stats.consonants += 1;
+
+                        if index > 0 && previous_char != '.' {
+                            let pair = LetterPair::new(previous_char, c);
+                            stats.add_pair(pair);
+                        }
+                    }
+                    _ => (),
+                }
+            }
+            previous_char = c;
+        }
+    }
 
     stats
 }
