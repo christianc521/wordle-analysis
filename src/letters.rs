@@ -25,4 +25,36 @@ impl PositionData {
 
         data
     }
+
+    pub fn analyze_bigram(
+        bigrams: &HashMap<String, i32>,
+        first_letter: Option<char>,
+    ) -> PositionData {
+        let mut data = PositionData {
+            letters: HashMap::new(),
+            index: 1,
+        };
+
+        for (bigram, count) in bigrams {
+            let lead_letter = bigram
+                .chars()
+                .nth(0)
+                .expect("Failed to reach bigram 2nd letter.");
+            match first_letter {
+                Some(c) => {
+                    if c == lead_letter {
+                        let second_letter = bigram
+                            .chars()
+                            .nth(1)
+                            .expect("Failed to reach bigram 2nd letter.");
+
+                        *data.letters.entry(second_letter).or_insert(count.clone()) += count;
+                    }
+                }
+                None => {}
+            }
+        }
+
+        data
+    }
 }

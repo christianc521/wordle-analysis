@@ -2,16 +2,25 @@ use full_palette::BLACK;
 use plotters::prelude::*;
 use std::{collections::HashMap, path::Path};
 
-pub fn draw_bigram_bar(frequencies: HashMap<String, i32>, caption: &str, filename: String) {
+pub fn draw_bigram_bar(
+    frequencies: HashMap<String, i32>,
+    caption: &str,
+    filename: String,
+    x_limit: Option<usize>,
+) {
     // Convert to a vector and sort by frequency (decending)
     let mut data: Vec<_> = frequencies.into_iter().collect();
     data.sort_by(|a, b| b.1.cmp(&a.1));
 
     // Limit to the top 20 bigrams
-    let top_data = if data.len() > 20 {
-        data[0..20].iter().cloned().collect()
-    } else {
-        data.clone()
+    let mut top_data: Vec<(String, i32)> = Vec::new();
+    match x_limit {
+        Some(limit) => {
+            if data.len() > limit {
+                top_data = data[0..limit].iter().cloned().collect()
+            }
+        }
+        None => top_data = data.clone(),
     };
 
     // Get the y-axis limit
@@ -46,7 +55,7 @@ pub fn draw_bigram_bar(frequencies: HashMap<String, i32>, caption: &str, filenam
     let label_style = TextStyle::from(("sans-serif", 20).into_font()).color(&(BLACK));
     chart
         .configure_mesh()
-        .x_labels(20)
+        .x_labels(max_frequency as usize)
         .label_style(label_style)
         .draw()
         .expect("Failed to draw bigram chart.");
